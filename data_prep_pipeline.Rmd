@@ -1,0 +1,87 @@
+---
+title: "Untitled"
+author: "Jordan Fox"
+date: "4/17/2021"
+output: pdf_document
+---
+```{r}
+library(forecast)
+library(timeSeries)
+library(stats)
+library(dplyr)
+library(tseries)
+
+```
+
+
+```{r}
+data <- read.csv('C:/Users/USER/Documents/TimeSeries/Project/data5/data7.csv')
+n <- dim(data)[1]
+data <- data[1:(n-2),]
+demand <- (data$ln_cons)
+supply <- (data$ln_prod)
+price <- (data$lnrprice)
+elec<- (data$elec)
+kilian <- (data$kilian)
+elec_com <-(data$rp_comm)
+elec_ind <-(data$nom_ind)
+
+```
+
+```{r}
+plot.ts(demand)
+plot.ts(supply)
+plot.ts(price)
+plot.ts(elec)
+plot.ts(kilian)
+```
+
+
+```{r}
+supply <-ts(supply, frequency = 12)
+demand <-ts(demand, frequency = 12)
+price <-ts(price, frequency = 12)
+elec <- ts(elec, frequency = 12)
+kilian <- ts(kilian, frequency = 12)
+elec_com <- ts(elec_com, frequency = 12)
+elec_ind<- ts(elec_ind, frequency = 12)
+
+
+supply_decomp <- decompose(supply)
+demand_decomp <- decompose(demand)
+price_decomp <- decompose(price)
+elec_decomp <- decompose(elec)
+kilian_decomp <- decompose(kilian)
+elecc_decomp <- decompose(elec_com)
+eleccc_decomp <- decompose(elec_ind)
+```
+
+```{r}
+supply_adj <- supply - supply_decomp$seasonal - supply_decomp$trend
+demand_adj <- demand - demand_decomp$seasonal - demand_decomp$trend
+price_adj <- price - price_decomp$seasonal - price_decomp$trend
+elec_adj <- elec - elec_decomp$seasonal - elec_decomp$trend
+kilian_adj <- kilian - kilian_decomp$seasonal - kilian_decomp$trend
+elecc_adj <- elec_com - elecc_decomp$seasonal - elecc_decomp$trend
+eleccc_adj <- elec_ind - eleccc_decomp$seasonal - eleccc_decomp$trend
+```
+
+```{r}
+
+ts.plot(supply_adj)
+ts.plot(demand_adj)
+ts.plot(price_adj)
+ts.plot(elec_adj)
+ts.plot(kilian_adj)
+ts.plot(elecc_adj)
+```
+
+```{r}
+write.csv2(supply_adj, file = "C:/Users/USER/Documents/TimeSeries/Project/data5/supply_adj.csv")
+write.csv2(demand_adj, file = "C:/Users/USER/Documents/TimeSeries/Project/data5/demandy_adj.csv")
+write.csv2(price_adj, file = "C:/Users/USER/Documents/TimeSeries/Project/data5/price_adj.csv")
+write.csv2(elec_adj, file = "C:/Users/USER/Documents/TimeSeries/Project/data5/elec_adj.csv")
+write.csv2(kilian_adj, file = "C:/Users/USER/Documents/TimeSeries/Project/data5/kilian_adj.csv")
+write.csv2(elecc_adj, file = "C:/Users/USER/Documents/TimeSeries/Project/data5/elecc_adj.csv")
+write.csv2(eleccc_adj, file = "C:/Users/USER/Documents/TimeSeries/Project/data5/eleccc_adj.csv")
+```

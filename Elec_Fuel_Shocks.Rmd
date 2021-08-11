@@ -1,0 +1,217 @@
+---
+title: The Short-Run Impacts of Natural Gas Shocks on Retail Electricity Prices in Texas:\ Evidence from a Structural VAR
+author: |
+  | Jordan Fox
+  | The University of Texas at Austin
+date: "4/18/2021"
+output: pdf_document
+bibliography: C:/Users/J/Desktop/TimeSeries/Project/cite2.bib
+indent: true
+geometry: margin=1in
+header-includes:
+    - \usepackage[square,numbers]{natbib}
+    - \usepackage{setspace}
+    - \doublespacing
+
+---
+```{r,echo = FALSE, warning = FALSE, message = FALSE, fig.align='center'}
+library(tinytex)
+library(mathjaxr)
+library(ggplot2)
+library(patchwork)
+library(tseries)
+```
+
+## Abstract 
+
+In this paper, I study the effects of shocks in the natural gas market on the price of
+electricity, focusing on the state of Texas. Using a structural VAR framework, I find asymmetric responses
+to fuel shocks between the three retail electricity market segments. These responses not only vary
+in magnitude, but also in time to full effect. I then examine the potential causes of these differences.
+
+## 1 Introduction
+
+A significant portion of the literature on energy prices is concerned with either forecasting electricity spot prices and futures or the structure of energy markets. While fuel costs are incorporated into most of these analyses, little of this research focuses on the dynamics of fuel shocks on retail electricity prices. An even smaller amount (none, to my knowledge) investigates how prices for the individual segments of the retail electricity market respond to such shocks. This paper attempts to fill that gap by isolating supply, demand, and transportation/storage shocks to the marginal fuel used in electricity generation and quantify their effects on the individual retail electricity market segments, focusing on natural gas and Texas electricity prices.  
+
+The design I use is loosely based on Kilian (2009), which uses vector autoregression to analyze how shocks to international oil production and global economic activity influence the global price of oil.^[@kilian2009impact] While there is work that extends Kilian's model to natural gas prices--incorporating the price of natural gas as the final variable in the causal ordering^[@jadidzadeh2017does]--I instead choose to model the natural gas market instead of using gas prices as an extension, and drop the oil market altogether. The reason for this is two fold: first, as I explore in the next section, natural gas markets are far less integrated than oil markets,^[@hulshof2016market,   @bachmeier2006testing] and as result regional prices do not necessarily move in the same direction as global economic activity. Thus fluctuations in the global market may not show up in the price of natural gas used to generate electricity in Texas (and by extension, electricity prices). Next, even ignoring the issue of market segmentation in the gas industry, choosing the causal ordering with so many interrelated variables can become an issue for the researcher. 
+
+The organization of the paper is as follows. First I briefly outline the structure of electricity markets in Texas and cover several determinants of the price of electricity in a competitive setting. I then describe the series that I use for my analysis and present my model, as well as the shocks I plan to identify. I then review the structural shocks identified by my model, as well as the responses from each of the three retail electricity market segments. Lastly, I discuss the potential causes of my results. 
+
+
+## 2 Texas Electricity Markets: Structure, Pricing, and the Marginal Generator
+
+The electricity market is unique in that, at all times, the amount of electricity supplied to the grid must exactly match the system load, or the amount of power being consumed. This phenomenon is owed to the fact that electricity cannot be stored efficiently, and it necessitates that an ISO like ERCOT coordinate with the entities generating and distributing electricity in order to prevent a system imbalance. In Texas, ERCOT oversees two markets: real-time and day-ahead. In both markets, prices are a function of the offer (supply) and
+bid (demand) contracts of its participants. The market-clearing price is determined in a process known as economic dispatch, whereby the system operator deploys generators based on having the lowest marginal cost to meet the system load.    
+
+Prices in the real-time market can be influenced by several factors, both on the demand side and supply side. On the supply side, these include the price of fuels, costs related to maintaining, financing, and operating generation plants, operation and maintenance costs of transmission lines and distribution systems, as well as state and federal regulations. On the demand side, the most obvious factor is the weather, which accounts for much of the seasonal variation in the price of natural gas and electricity.^[@mu2007weather, @brown2008drives]
+
+Another factor that can influence energy prices is market power, specifically when a generator is said to be generating the marginal unit of electricity which would then satisfy the next hypothetical unit of demand. As pointed out before, the spot price is a dependent on the different bids and offers of market participants, and many times these are the predominant participants in their respective markets. The result is that spot prices will then depend on this one generator's marginal offer, resulting in a situation where there is a distinct incentive for that generator to price above its marginal cost of generation. The upper bound for this markup is usually the next-highest offer.^[@biggar2014economics] This case is particularly relevant for Texas, as when electricity markets were being deregulated in the late nineties and early aughts, the marginal generators often were those which relied on natural gas. As a result, generators had a clear incentive during this period to price up, and in theory, fluctuations in the price of natural gas should show up in electricity prices during this period.
+
+## 3 Data
+
+The framework I consider uses six monthly series ranging from June 2001 to September 2012. To model the natural gas market at the national level, I use data on the total production of natural gas (gross withdrawals, in millions of cubic feet) and total consumption of natural gas (also in millions of cubic feet) for the entire US. I then use a series on the price of natural gas in the state of Texas. While this price follows the Henry Hub spot price--widely considered to be representative of the conditions for the whole industry--it also reflects production, transportation, and storage costs specific to the region. Lastly, I use three series of retail electricity prices: industrial, commercial, and residential. All of the data can be accessed from the Energy Information Administration's website. The evolution of the raw series are shown in Figure 1 and Figure 2. 
+
+```{r,echo = FALSE, warning = FALSE, message = FALSE, fig.align='center'}
+
+data1 <- read.csv('C:/Users/J/Desktop/TimeSeries/Project/data5/data5.csv')
+data1$prod <- data1$prod/1000
+data2 <- read.csv('C:/Users/J/Desktop/TimeSeries/Project/elec_prices2001_13.csv')
+
+p4 <- ggplot(data1, aes(x = t, y = prod)) + geom_line() + xlab("Month") + ylab("Prod of N.Gas") + theme_classic()
+p5 <- ggplot(data1, aes(x = t, y = cons)) + geom_line() + xlab("Month") + ylab("Cons of N.Gas") + theme_classic()
+p6 <- ggplot(data1, aes(x = t, y = price_nom)) + geom_line() + xlab("Month") + ylab("Price of N.Gas") + theme_classic()
+
+p1 <- ggplot(data2, aes(x = t, y = res)) + geom_line() + xlab("Month") + ylab("Residential") + theme_classic()
+p2 <- ggplot(data2, aes(x = t, y = com)) + geom_line() + xlab("Month") + ylab("Commercial") + theme_classic()
+p3 <- ggplot(data2, aes(x = t, y = ind)) + geom_line() + xlab("Month") + ylab("Industrial") + theme_classic()
+
+(p4/p5/p6) + xlab("Figure 1: Historical Evolution of Natural Gas Market")
+(p1/p2/p3) + xlab("Figure 2: Historical Evolution of Texas Retail Electricity Prices (cents/kWh hr)")
+
+
+```
+
+```{r, echo=FALSE, output = FALSE}
+elecres <- ts(data2$res, frequency=12)
+eleccom <- ts(data2$com, frequency = 12)
+elecind <- ts(data2$ind, frequency = 12)
+
+comb_ts <- cbind(elecres,eleccom,elecind)
+
+```
+
+It should be clear from the scale of the y axis in Table 2 that residential electricity prices tend to be the highest. This premium is a result of distribution costs; transmitting electricity to residential and commercial consumers involves stepping down the voltage, making its transmission less efficient and more expensive. Additionally, industrial consumers tend to use more electricity, and as a result, can receive it at higher voltages. This means that industrial prices tend to resemble the wholesale price of electricity, although this is not always the case. 
+
+Because of the seasonal nature of natural gas and electricity markets, all six series have been deseasonalized and detrended using R's decompose(). This is a function which estimates trend and seasonal components using moving averages, allowing the user to difference the raw series with its trend and seasonal variation to obtain a weakly stationary series, which is a required condition when using vector autoregression. 
+
+## 4 Structural VAR Model 
+
+I propose a VAR using the above data for $z_{t} = (prod^{US}_{t}, cons^{US}_{t},gasPrice^{TX}_{t}, elecPrice^{TX}_{t})$
+where $prod^{US}_{t}$ represents total gross withdrawals of natural gas in the US, 
+$cons^{US}_{t}$ represents total consumption of natural gas in the US, $gasPrice^{TX}_{t}$ 
+represents the price of natural gas in Texas, and $elecPrice^{TX}_{t}$ represents 
+the price of electricity for a particular market segment in Texas. I make use of the short-run
+restrictions found in Kilian (2009), and use a lag length of three; this is consistent with the
+literature on the tendency of gas and electricity prices to be quickly mean-reverting in the presence of shocks.
+Additionally, the limited number of observations I use (just over 120) bars me from using long-run restrictions such as
+those outlined in Christiano et al (2006). When the number of observations
+is sufficiently limited, long-run restrictions can lead to unreliable results.^[@kliesen2006rising,@ronayne2011impulse]
+
+The structural representation of the VAR takes the form:
+
+
+\begin{equation}\tag{1}
+A_{0}z_t = \alpha + \sum_{i=1}^{3} A_{1}z_{t-1} +\epsilon_{t}
+\end{equation}
+
+
+In order to impose short-run restrictions, we assume that $A_{0}$ is an upper triangular matrix. 
+This allows us to impose the causal ordering from $z_{t}$, and implies the following
+structural innovations: 
+
+\
+
+\begin{equation}\tag{2}
+e_{t}\equiv\begin{pmatrix}
+e^{prod}_{t}\\
+e^{cons}_{t}\\
+e^{gasPrice}_{t}\\
+e^{elecPrice}_{t}
+\end{pmatrix}
+\begin{bmatrix}
+a_{11}&0&0&0\\
+a_{21} & a_{22} & 0 &0\\
+a_{31} & a_{32} & a_{33}&0\\
+a_{41} & a_{42} & a_{43}&a_{44}\\
+\end{bmatrix}
+\begin{pmatrix} 
+\varepsilon^{natural\ gas\ supply\ shock}_{t}\\
+\varepsilon^{aggregate\ demand\ shock}_{t}\\
+\varepsilon^{region-specific\ gas\ shock}_{t}\\
+\varepsilon^{electricity\ demand \ shock}_{t}\end{pmatrix}
+\end{equation}
+\
+
+Equation (2) shows the structural errors implied by the short-run restrictions and causal ordering. Supply
+shocks are defined as unanticipated changes in the production of natural gas. Innovations to aggregate national 
+gas consumption that cannot be explained by shocks to the supply of natural gas will be defined as aggregate demand 
+shocks. I argue that this reasonable due to the widespread use of natural gas in industry, transportation, and electricity
+production. Increases in economic activity, and thus demand, will be reflected in natural gas consumption. This ordering
+implies that aggregate demand shocks cannot have an impact on the production of natural gas, except after one period.
+
+Shocks to the price of natural gas are defined as a region-specific gas shock. These can be thought of as disruptions in the transportation or storage networks utilized in the regional gas market. As noted by Brown and Yucel (2008), regional prices of natural gas are influenced by storage and transportation constraints, many times brought on about by unanticipated changes in the weather or production. Unexplained movements in the price of electricity are then defined as electricity-specific demand shock.
+
+```{r, echo = FALSE, warning = FALSE}
+library(patchwork)
+data3 <- read.csv('C:/Users/J/Desktop/TimeSeries/Project/full_data.csv')
+u1 <- ggplot(data3, aes(x = t, y = u1)) + geom_line() + ylab("Production") + theme_classic()
+u2 <- ggplot(data3, aes(x = t, y = u2)) + geom_line() + ylab("Consumption") + theme_classic()
+u3 <- ggplot(data3, aes(x = t, y = u3)) + geom_line() + ylab("Gas Price") + theme_classic()
+u4 <- ggplot(data3, aes(x = t, y = u4)) + geom_line() + ylab("u4") + theme_classic()
+u5 <- ggplot(data3, aes(x = t, y = u5)) + geom_line() + ylab("Industrial Price Shocks") + theme_classic()
+u6 <- ggplot(data3, aes(x = t, y = u6)) + geom_line() + ylab("Ind. Elec Price") + theme_classic()
+
+(u1/u2/u3/u6) + xlab("Figure 3: Evolution of Structural Shocks")
+```
+
+## 5.1 Empirical Results: Evolution of Structural Shocks
+
+Figure 3 shows how shocks in the electricity price are determined simultaneously by shocks in the supply, demand, and price of natural gas. Here, u1-u4 represent shocks to gas production, gas consumption, the regional price of natural gas, and the industrial price of electricity, respectively. I choose to show industrial price shocks because industrial prices are known to closely resemble the wholesale price of electricity. 
+
+Two shocks are visually apparent in the supply of natural gas: one near t = 50, and the other near t = 80. The first corresponds to Hurricanes Katrina and Rita, which occurred in September and October of 2005 resulted in a complete shut down of oil and gas production in the Gulf of Mexico, effectively halting 20% of the country's natural gas production.^[@cruz2008damage] The second shock corresponds to the Great Recession, which began in the fall of 2007. Here,the economic crisis caused the price of oil and gas to collapse. We can see the effects of both shocks reverberate throughout the following structural equations, each resulting in significant increases in the price of gas, and by extension, electricity prices.
+
+
+## 5.2 Empirical Results: Short-Run Impulse Responses
+
+Figures 4 and 5 show the impulse responses of each market segment's electricity price
+to a one-unit deviation in aggregate production of natural gas, aggregate consumption 
+of natural gas, and price of natural gas. The differences between the three
+segments is most clear for gas price shocks: industrial and commercial prices
+increase immediately (with the latter having a far milder response), whereas residential
+prices only appear to increase with a lag. Commercial prices tend to be far less responsive
+to shocks in general; the contemporaneous effects for both supply and demand shocks is indistinguishable 
+from zero. Meanwhile the impact of a fuel price shock, while immediate, is far smaller in magnitude when
+compared to the reaction of the industrial and residential markets. 
+
+\
+
+```{r, echo = FALSE, out.width = '95%', align = 'center'}
+knitr::include_graphics('C:/Users/J/Desktop/TimeSeries/Project/IRF1.jpg')
+```
+
+\
+
+```{r, echo = FALSE, out.width = '95%', align = 'center'}
+knitr::include_graphics('C:/Users/J/Desktop/TimeSeries/Project/IRF2.jpg')
+```
+
+\
+
+```{r, echo = FALSE, out.width = '95%', align = 'center'}
+knitr::include_graphics('C:/Users/J/Desktop/TimeSeries/Project/IRF3.jpg')
+```
+
+\
+
+One remarkable point about the response functions is the impact that increases in the industrial price of electricity
+have on the regional price of natural gas. Not surprisingly, changes in the commercial and residential prices cause no
+significant effect. This difference is easily explained by the fact that machinery used in the withdrawal, processing, transportation, and storage of fuels is dependent on electricity, and
+it is somewhat reassuring for our results to see this effect.
+
+
+## 6 Explaining the Differences in Reactions Between Market Segments 
+
+There are a handful of theories for the differences in impulse responses between market segments.
+The most obvious one, at least for the sensitivity of residential electricity prices, is transmission costs; the process of distributing energy into residential areas requires the use of transformers to convert alternating current to direct current.^[@biggar2014economics] However, commercial customers also require distributors to step down the voltage, making this explanation less plausible with such a minimal response from commercial prices. Additionally we might expect industrial prices to be less responsive to shocks than commercial prices, given that many large-scale plants 1) tend to have AC lines that run directly from generators themselves, and 2) sometimes have capabilities for generating electricity on-site. However, our results show that transmission alone is isn't a plausible explanation, as industrial prices are far more responsive than in the commercial segment.
+
+The next scenario to explain the differences between retail segments is market power on the part of electricity retailers. This can arise if customers must overcome frictions (be it from search or transaction) to switch providers, or have incomplete information on competitors or alternative retailers. Wilson and Price (2010) find that customers tend to have a default preference for their incumbent provider^[@wilson2010consumers]; Waterson (2003) describes how in such a settings, reluctance on the part of the customer to switch providers can "lead to sub-competitive outcomes".^[@waterson2003role] Hortaçsu et al. (2014) finds a significant brand advantage for incumbents, and attributes it to consumers' "incomplete understanding of the market".^[@hortaccsu2017power] 
+
+It may be possible to explain these results using a combination of these frameworks. First, residential electricity prices could be more responsive to shocks both due to the process stepping down the voltage *and* market power on the part of retailers. This would make sense if, for example, retailers knew that their residential customers were less likely to switch in the face of a short-term spike in energy prices. If this is the case, then the lack of a response in commercial prices to fuel price shocks may be due to some knowledge retailers have about the responsiveness of commercial customers. If commercial customers are more likely to shop for a different provider, then retailers have an incentive to pass off fuel cost increases to residential customers. Alternatively, it could also be that commercial customers are more likely to lock in electricity rates with long-term contracts, thereby mitigating the risk of volatility in energy prices.
+
+As discussed before, industrial customers often have high-voltage transmission lines that connect them directly to their energy provider, allowing them to bypass additional transmission costs. However new lines can be prohibitively expensive to construct (upwards of $200,000 per square mile), thereby imbuing retailers with the ability to distort energy prices in a scenario where they are aware of the limited options their industrial customers face.
+
+## 7 Conclusion 
+
+My short-run structural VAR found asymmetric responses to different shocks in the natural gas market between the three retail electricity sectors. While the responses from the commercial and residential sectors are easy to explain using market power, the differences between the responses for industrial and commercial is more puzzling and warrants further study. Because electricity price data is obtainable in far higher frequencies than used in this paper, using a more granular data set may produce different results, or help better explain the differences in responses I have observed.
+
+## References
